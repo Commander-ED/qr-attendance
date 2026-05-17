@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#1a1a1a" media="(prefers-color-scheme: dark)">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="QR Attendance">
+  <title>QR Attendance System</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div class="app">
+
+  <!-- Top bar -->
+  <div class="topbar">
+    <div class="topbar-title">
+      <i class="ti ti-qrcode" aria-hidden="true" style="font-size:20px"></i>
+      QR Attendance
+    </div>
+    <div style="font-size:12px;color:var(--text-2);display:flex;align-items:center;gap:5px">
+      <span id="dot" style="width:7px;height:7px;border-radius:50%;background:#3B6D11;display:inline-block"></span>
+      <span id="conn-lbl">Online</span>
+    </div>
+  </div>
+
+  <!-- Tab bar -->
+  <div class="tabs">
+    <div class="tab active" onclick="goTab('scan')"><i class="ti ti-scan" aria-hidden="true"></i>Scan</div>
+    <div class="tab" onclick="goTab('qrcodes')"><i class="ti ti-qrcode" aria-hidden="true"></i>QR Codes</div>
+    <div class="tab" onclick="goTab('history')"><i class="ti ti-history" aria-hidden="true"></i>History</div>
+    <div class="tab" onclick="goTab('students')"><i class="ti ti-users" aria-hidden="true"></i>Students</div>
+    <div class="tab" onclick="goTab('report')"><i class="ti ti-chart-bar" aria-hidden="true"></i>Report</div>
+  </div>
+
+  <!-- ===== SCAN PAGE ===== -->
+  <div class="page active" id="page-scan">
+    <div class="cls-row" style="margin-top:12px">
+      <label><i class="ti ti-layout-list" aria-hidden="true" style="vertical-align:-2px"></i> Section</label>
+      <select class="sel" id="scan-class" style="flex:1"></select>
+    </div>
+    <div class="date-row">
+      <label><i class="ti ti-calendar" aria-hidden="true" style="vertical-align:-2px"></i> Date</label>
+      <input type="date" class="inp" id="scan-date" style="margin:0">
+    </div>
+    <div class="stat-grid">
+      <div class="stat-box"><div class="stat-num green" id="s-present">0</div><div class="stat-lbl">Scanned in</div></div>
+      <div class="stat-box"><div class="stat-num red" id="s-absent">0</div><div class="stat-lbl">Not yet scanned</div></div>
+    </div>
+    <div class="card">
+      <div class="card-head">
+        <i class="ti ti-camera" aria-hidden="true"></i>Camera Scanner
+        <span style="margin-left:auto" class="scan-cnt-badge" id="scan-live-cnt">0 scanned</span>
+      </div>
+      <div class="card-body" style="padding:10px">
+        <div class="scanner-box" id="scanner-box">
+          <video id="video" playsinline autoplay muted></video>
+          <div class="scan-overlay" id="scan-overlay">
+            <div class="scan-corner tl"></div><div class="scan-corner tr"></div>
+            <div class="scan-corner bl"></div><div class="scan-corner br"></div>
+            <div class="scan-line"></div>
+          </div>
+          <div class="cam-placeholder" id="cam-placeholder">
+            <i class="ti ti-camera-off" aria-hidden="true" style="font-size:34px;color:var(--text-2);opacity:.4"></i>
+            <span style="font-size:13px;color:var(--text-2)">Tap Start to open camera</span>
+          </div>
+        </div>
+        <button class="btn-primary" id="btn-scan-toggle" onclick="toggleScan()">
+          <i class="ti ti-scan" aria-hidden="true"></i>
+          <span id="scan-btn-lbl">Start Scanning</span>
+        </button>
+        <div id="toast-scan" class="toast" style="margin-top:8px"></div>
+      </div>
+    </div>
+    <div class="section-lbl">Recent scans</div>
+    <div class="recent-scans" id="recent-scans">
+      <div class="empty"><i class="ti ti-qrcode" aria-hidden="true"></i>No scans yet today</div>
+    </div>
+  </div>
+
+  <!-- ===== QR CODES PAGE ===== -->
+  <div class="page" id="page-qrcodes">
+    <div class="cls-row" style="margin-top:12px">
+      <label>Section</label>
+      <select class="sel" id="qr-class" style="flex:1" onchange="renderQRPage()"></select>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:10px">
+      <button class="btn-sm" style="flex:1" onclick="printQRs()"><i class="ti ti-printer" aria-hidden="true"></i> Print All QR</button>
+      <button class="btn-secondary" onclick="renderQRPage()"><i class="ti ti-refresh" aria-hidden="true"></i> Refresh</button>
+    </div>
+    <div class="qr-grid" id="qr-grid">
+      <div class="empty" style="grid-column:1/-1"><i class="ti ti-qrcode" aria-hidden="true"></i>Select a section to see QR codes</div>
+    </div>
+  </div>
+
+  <!-- ===== HISTORY PAGE ===== -->
+  <div class="page" id="page-history">
+    <div class="cls-row" style="margin-top:12px">
+      <label>Section</label>
+      <select class="sel" id="hist-class" style="flex:1" onchange="renderHistory()"></select>
+    </div>
+    <div class="card">
+      <div class="card-body" id="history-body" style="padding:8px 14px">
+        <div class="empty"><i class="ti ti-calendar-off" aria-hidden="true"></i>No records yet</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== STUDENTS PAGE ===== -->
+  <div class="page" id="page-students">
+    <div class="card" style="margin-top:12px">
+      <div class="card-head"><i class="ti ti-layout-grid" aria-hidden="true"></i>Sections / Classes</div>
+      <div class="card-body">
+        <div class="row">
+          <input class="inp" style="margin:0" id="new-cls-inp" placeholder="e.g. Grade 7-A or Section Rizal">
+          <button class="btn-sm" onclick="addSection()">Add</button>
+        </div>
+        <div id="section-chips" style="flex-wrap:wrap;display:flex;gap:4px;margin-top:4px"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-head"><i class="ti ti-user-plus" aria-hidden="true"></i>Add Student</div>
+      <div class="card-body">
+        <div class="row">
+          <input class="inp" style="margin:0;flex:1.4" id="new-sname" placeholder="Full name">
+          <input class="inp" style="margin:0;flex:0.9" id="new-sid" placeholder="LRN / ID">
+        </div>
+        <div class="row">
+          <select class="sel inp" style="margin:0;flex:1" id="new-scls"></select>
+          <button class="btn-sm" onclick="addStudent()">Add</button>
+        </div>
+      </div>
+    </div>
+    <!-- CSV Import -->
+    <div class="card">
+      <div class="card-head"><i class="ti ti-file-upload" aria-hidden="true"></i>Import Students from CSV</div>
+      <div class="card-body">
+        <p style="font-size:12px;color:var(--text-2);margin-bottom:10px">
+          CSV format: <code style="background:var(--bg);padding:2px 6px;border-radius:4px;font-size:11px">Name,LRN/ID</code> per row. No header row needed.
+        </p>
+        <div class="row" style="margin-bottom:8px">
+          <select class="sel inp" style="margin:0;flex:1" id="import-cls"></select>
+        </div>
+        <label id="csv-drop-zone" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:20px;border:1.5px dashed var(--border-med);border-radius:var(--radius);cursor:pointer;background:var(--bg);transition:background .2s">
+          <i class="ti ti-upload" aria-hidden="true" style="font-size:28px;color:var(--text-2);opacity:.6"></i>
+          <span style="font-size:13px;color:var(--text-2)">Tap to choose CSV file</span>
+          <span style="font-size:11px;color:var(--text-3)" id="csv-filename">No file chosen</span>
+          <input type="file" id="csv-file-input" accept=".csv,text/csv" style="display:none" onchange="previewCSV(this)">
+        </label>
+        <div id="csv-preview" style="display:none;margin-top:10px">
+          <div style="font-size:12px;font-weight:600;color:var(--text-2);margin-bottom:6px" id="csv-preview-label"></div>
+          <div id="csv-preview-list" style="max-height:160px;overflow-y:auto;display:flex;flex-direction:column;gap:4px"></div>
+          <div style="display:flex;gap:8px;margin-top:10px">
+            <button class="btn-sm" style="flex:1;background:#EAF3DE;color:#27500A;border:none" onclick="importCSV()">
+              <i class="ti ti-check" aria-hidden="true"></i> Import All
+            </button>
+            <button class="btn-sm" style="flex:1;background:var(--bg);color:var(--text-2);border:0.5px solid var(--border-med)" onclick="cancelImport()">
+              Cancel
+            </button>
+          </div>
+        </div>
+        <div style="margin-top:10px;padding:10px;background:var(--bg);border-radius:var(--radius);font-size:12px;color:var(--text-2);line-height:1.7">
+          <b>📋 Example CSV format:</b><br>
+          Juan dela Cruz,202400001<br>
+          Maria Santos,202400002<br>
+          Pedro Reyes,202400003
+        </div>
+      </div>
+    </div>
+
+    <div class="cls-row">
+      <label>Show section</label>
+      <select class="sel" id="view-cls" style="flex:1" onchange="renderStudentList()"></select>
+    </div>
+    <div class="student-list" id="student-list">
+      <div class="empty"><i class="ti ti-users" aria-hidden="true"></i>No students yet</div>
+    </div>
+  </div>
+
+  <!-- ===== REPORT PAGE ===== -->
+  <div class="page" id="page-report">
+    <div class="cls-row" style="margin-top:12px">
+      <label>Section</label>
+      <select class="sel" id="rep-class" style="flex:1" onchange="renderReport()"></select>
+    </div>
+    <div class="stat-grid" id="rep-stats"></div>
+    <div class="section-lbl">Per-student attendance</div>
+    <div class="card">
+      <div class="card-body" id="rep-table" style="padding:8px 14px">
+        <div class="empty"><i class="ti ti-chart-bar" aria-hidden="true"></i>No data yet</div>
+      </div>
+    </div>
+    <button class="export-btn" onclick="exportCSV()">
+      <i class="ti ti-download" aria-hidden="true" style="font-size:18px"></i>Export to CSV / Excel
+    </button>
+    <button class="export-btn sec" onclick="clearData()">
+      <i class="ti ti-trash" aria-hidden="true" style="font-size:18px"></i>Clear Local Data
+    </button>
+  </div>
+
+</div><!-- end .app -->
+
+<!-- Hidden canvas for QR scanning -->
+<canvas id="qr-tmp" style="display:none"></canvas>
+
+<!-- Libraries -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+
+<!-- App -->
+<script src="js/config.js"></script>
+<script src="js/app.js"></script>
+
+</body>
+</html>
